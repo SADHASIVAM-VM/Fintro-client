@@ -55,12 +55,12 @@ export const Ledger: React.FC = () => {
   const { enqueueSnackbar } = useSnackbar();
 
   // States
-  const [isAddAccountOpen, setIsAddOpen] = useState(false); // Using setIsAddOpen to align with original imports/uses
+  const [isAddAccountOpen, setIsAddAccountOpen] = useState(false); // Using setIsAddOpen to align with original imports/uses
   const [isAddTxOpen, setIsAddTxOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [activeAccount, setActiveAccount] = useState<any | null>(null);
   const [prefilledParentTxId, setPrefilledParentTxId] = useState<string | null>(null);
-  
+
   // Viewer Modal State
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [viewerUrl, setViewerUrl] = useState<string | undefined>(undefined);
