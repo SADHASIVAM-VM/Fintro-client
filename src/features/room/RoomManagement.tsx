@@ -112,10 +112,10 @@ export const RoomManagement: React.FC = () => {
   const currency = settings?.currency || 'INR';
 
   // Forms
-  const { register: regRent, handleSubmit: handleRent, reset: resetRent, formState: { errors: rentErr } } = useForm<RentSchema>({ resolver: zodResolver(rentSchema) });
-  const { register: regBill, handleSubmit: handleBill, reset: resetBill, formState: { errors: billErr } } = useForm<BillSchema>({ resolver: zodResolver(billSchema) });
-  const { register: regPurchase, handleSubmit: handlePurchase, reset: resetPurchase, formState: { errors: purchaseErr } } = useForm<PurchaseSchema>({ resolver: zodResolver(purchaseSchema) });
-  const { register: regInventory, handleSubmit: handleInventory, reset: resetInventory, formState: { errors: invErr } } = useForm<InventorySchema>({ resolver: zodResolver(inventorySchema) });
+  const { register: regRent, handleSubmit: handleRent, reset: resetRent, formState: { errors: rentErr, isSubmitting: isSubmittingRent } } = useForm<RentSchema>({ resolver: zodResolver(rentSchema) });
+  const { register: regBill, handleSubmit: handleBill, reset: resetBill, formState: { errors: billErr, isSubmitting: isSubmittingBill } } = useForm<BillSchema>({ resolver: zodResolver(billSchema) });
+  const { register: regPurchase, handleSubmit: handlePurchase, reset: resetPurchase, formState: { errors: purchaseErr, isSubmitting: isSubmittingPurchase } } = useForm<PurchaseSchema>({ resolver: zodResolver(purchaseSchema) });
+  const { register: regInventory, handleSubmit: handleInventory, reset: resetInventory, formState: { errors: invErr, isSubmitting: isSubmittingInventory } } = useForm<InventorySchema>({ resolver: zodResolver(inventorySchema) });
 
   // Dropzone
   const onDrop = (acceptedFiles: File[]) => {
@@ -528,7 +528,9 @@ export const RoomManagement: React.FC = () => {
           <Input label="Rent Amount" placeholder="0.00" error={rentErr.rentAmount?.message} {...regRent('rentAmount')} />
           <Input label="Due Date" type="date" error={rentErr.dueDate?.message} {...regRent('dueDate')} />
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="submit">Create Invoice</Button>
+            <Button type="submit" disabled={isSubmittingRent}>
+              {isSubmittingRent ? 'Creating...' : 'Create Invoice'}
+            </Button>
           </div>
         </form>
       </Dialog>
@@ -553,7 +555,9 @@ export const RoomManagement: React.FC = () => {
           </div>
           <Input label="Due Date" type="date" error={billErr.dueDate?.message} {...regBill('dueDate')} />
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="submit">Log Bill</Button>
+            <Button type="submit" disabled={isSubmittingBill}>
+              {isSubmittingBill ? 'Logging...' : 'Log Bill'}
+            </Button>
           </div>
         </form>
       </Dialog>
@@ -602,7 +606,9 @@ export const RoomManagement: React.FC = () => {
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="submit">Save Purchase</Button>
+            <Button type="submit" disabled={isSubmittingPurchase}>
+              {isSubmittingPurchase ? 'Saving...' : 'Save Purchase'}
+            </Button>
           </div>
         </form>
       </Dialog>
@@ -638,7 +644,9 @@ export const RoomManagement: React.FC = () => {
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="submit">Add Asset</Button>
+            <Button type="submit" disabled={isSubmittingInventory}>
+              {isSubmittingInventory ? 'Adding...' : 'Add Asset'}
+            </Button>
           </div>
         </form>
         </Dialog>

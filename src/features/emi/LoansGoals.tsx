@@ -61,6 +61,7 @@ export const LoansGoals: React.FC = () => {
   const [isAdjustProgressOpen, setIsAdjustProgressOpen] = useState(false);
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [adjustAmount, setAdjustAmount] = useState('');
+  const [isSavingProgress, setIsSavingProgress] = useState(false);
 
   // Queries
   const { data: emis = [], isLoading: isLoadingEmis, createEmi, payEmi, deleteEmi } = useEmi();
@@ -70,8 +71,8 @@ export const LoansGoals: React.FC = () => {
   const currency = settings?.currency || 'INR';
 
   // Forms
-  const { register: regEmi, handleSubmit: handleEmi, reset: resetEmi, formState: { errors: emiErr } } = useForm<EmiSchema>({ resolver: zodResolver(emiSchema) });
-  const { register: regSavings, handleSubmit: handleSavings, reset: resetSavings, formState: { errors: savingsErr } } = useForm<SavingsSchema>({ resolver: zodResolver(savingsSchema) });
+  const { register: regEmi, handleSubmit: handleEmi, reset: resetEmi, formState: { errors: emiErr, isSubmitting: isSubmittingEmi } } = useForm<EmiSchema>({ resolver: zodResolver(emiSchema) });
+  const { register: regSavings, handleSubmit: handleSavings, reset: resetSavings, formState: { errors: savingsErr, isSubmitting: isSubmittingSavings } } = useForm<SavingsSchema>({ resolver: zodResolver(savingsSchema) });
 
   const onSubmitEmi = async (data: EmiSchema) => {
     try {
@@ -137,11 +138,14 @@ export const LoansGoals: React.FC = () => {
   const handleSaveProgress = async () => {
     if (!selectedGoalId || isNaN(Number(adjustAmount))) return;
     try {
+      setIsSavingProgress(true);
       await updateSavingsProgress({ id: selectedGoalId, amount: Number(adjustAmount) });
       enqueueSnackbar('Savings progress updated', { variant: 'success' });
       setIsAdjustProgressOpen(false);
     } catch {
       enqueueSnackbar('Failed to update savings', { variant: 'error' });
+    } finally {
+      setIsSavingProgress(false);
     }
   };
 
@@ -392,7 +396,9 @@ export const LoansGoals: React.FC = () => {
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="submit">Create Loan</Button>
+            <Button type="submit" disabled={isSubmittingEmi}>
+              {isSubmittingEmi ? 'Creating...' : 'Create Loan'}
+            </Button>
           </div>
         </form>
       </Dialog>
@@ -420,7 +426,9 @@ export const LoansGoals: React.FC = () => {
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="submit">Log Goal</Button>
+            <Button type="submit" disabled={isSubmittingSavings}>
+              {isSubmittingSavings ? 'Logging...' : 'Log Goal'}
+            </Button>
           </div>
         </form>
       </Dialog>
@@ -435,7 +443,9 @@ export const LoansGoals: React.FC = () => {
             onChange={(e) => setAdjustAmount(e.target.value)}
           />
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button onClick={handleSaveProgress}>Confirm Deposit</Button>
+            <Button onClick={handleSaveProgress} disabled={isSavingProgress}>
+              {isSavingProgress ? 'Confirming...' : 'Confirm Deposit'}
+            </Button>
           </div>
         </div>
       </Dialog>

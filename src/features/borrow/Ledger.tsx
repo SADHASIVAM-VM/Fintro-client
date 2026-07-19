@@ -77,7 +77,7 @@ export const Ledger: React.FC = () => {
     register: regAccount,
     handleSubmit: handleAccountSubmit,
     reset: resetAccount,
-    formState: { errors: accErrors },
+    formState: { errors: accErrors, isSubmitting: isSubmittingAccount },
   } = useForm<AccountSchema>({ resolver: zodResolver(accountSchema) });
 
   const {
@@ -86,7 +86,7 @@ export const Ledger: React.FC = () => {
     setValue: setTxValue,
     reset: resetTx,
     watch: watchTx,
-    formState: { errors: txErrors },
+    formState: { errors: txErrors, isSubmitting: isSubmittingTx },
   } = useForm<TransactionSchema>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
@@ -631,7 +631,9 @@ export const Ledger: React.FC = () => {
             {...regAccount('phone')}
           />
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="submit">Create Account</Button>
+            <Button type="submit" disabled={isSubmittingAccount}>
+              {isSubmittingAccount ? 'Creating...' : 'Create Account'}
+            </Button>
           </div>
         </form>
       </Dialog>
@@ -735,7 +737,9 @@ export const Ledger: React.FC = () => {
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="submit">Log Transaction</Button>
+            <Button type="submit" disabled={isSubmittingTx}>
+              {isSubmittingTx ? 'Logging...' : 'Log Transaction'}
+            </Button>
           </div>
         </form>
       </Dialog>
