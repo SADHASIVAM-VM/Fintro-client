@@ -4,6 +4,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { SnackbarProvider } from 'notistack';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from 'react-error-boundary';
+import { Toaster } from 'sonner';
 import { store } from '@/app/store';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/Button';
@@ -82,6 +83,7 @@ export const Providers: React.FC<{ children: React.ReactNode }> = ({ children })
             <HelmetProvider>
               <SnackbarProvider maxSnack={3} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
                 {children}
+                <Toaster richColors closeButton position="top-right" />
               </SnackbarProvider>
             </HelmetProvider>
           </ThemeProvider>
