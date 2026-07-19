@@ -96,7 +96,7 @@ export const UsersList: React.FC = () => {
     try {
       await deleteUser(id).unwrap();
       toast.success('User deleted successfully');
-      setSelectedRows((prev) => prev.filter((r) => r.id !== id));
+      setSelectedRows((prev) => prev.filter((r) => (r.id || (r as any)._id) !== id));
     } catch (err: any) {
       toast.error(err.data?.message || 'Failed to delete user');
     }
@@ -124,7 +124,7 @@ export const UsersList: React.FC = () => {
           <Avatar src={row.avatar} alt={row.name} />
           <div className="text-left font-sans">
             <span className="font-semibold text-foreground text-sm block">{row.name}</span>
-            <span className="text-xs text-muted-foreground font-mono block">{row.id}</span>
+            <span className="text-xs text-muted-foreground font-mono block">{row.id || (row as any)._id}</span>
           </div>
         </div>
       ),
@@ -168,7 +168,7 @@ export const UsersList: React.FC = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => handleDeleteClick(row.id)}
+            onClick={() => handleDeleteClick(row.id || (row as any)._id)}
             className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -242,7 +242,7 @@ export const UsersList: React.FC = () => {
         selectedRows={selectedRows}
         onSelectedRowsChange={setSelectedRows}
         bulkActions={bulkActions}
-        getRowId={(row) => row.id}
+        getRowId={(row) => row.id || (row as any)._id}
       />
 
       {/* Dialog for Creating Users */}

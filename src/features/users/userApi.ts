@@ -26,6 +26,13 @@ export const userApi = baseApi.injectEndpoints({
         method: 'GET',
         params,
       }),
+      transformResponse: (response: PaginatedResponse<any>) => ({
+        ...response,
+        data: response.data.map((u: any) => ({
+          ...u,
+          id: u.id || u._id,
+        })),
+      }),
       providesTags: (result) =>
         result
           ? [
@@ -39,6 +46,10 @@ export const userApi = baseApi.injectEndpoints({
         url: `/users/${id}`,
         method: 'GET',
       }),
+      transformResponse: (response: any) => ({
+        ...response,
+        id: response.id || response._id,
+      }),
       providesTags: (_result, _error, id) => [{ type: 'User', id }],
     }),
     createUser: builder.mutation<User, Omit<User, 'id'>>({
@@ -46,6 +57,10 @@ export const userApi = baseApi.injectEndpoints({
         url: '/users',
         method: 'POST',
         data: newUser,
+      }),
+      transformResponse: (response: any) => ({
+        ...response,
+        id: response.id || response._id,
       }),
       invalidatesTags: [{ type: 'User', id: 'LIST' }],
     }),
@@ -55,6 +70,10 @@ export const userApi = baseApi.injectEndpoints({
         url: `/users/${id}`,
         method: 'PATCH',
         data: changes,
+      }),
+      transformResponse: (response: any) => ({
+        ...response,
+        id: response.id || response._id,
       }),
       invalidatesTags: (_result, _error, { id }) => [
         { type: 'User', id },
