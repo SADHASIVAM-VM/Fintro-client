@@ -14,6 +14,7 @@ import {
   TrendingDown,
   Briefcase,
   Calendar,
+  Eye,
 } from 'lucide-react';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useCategories } from '@/hooks/useCategories';
@@ -75,13 +76,45 @@ export const Expenses: React.FC = () => {
   const [viewerUrl, setViewerUrl] = useState<string | undefined>(undefined);
   const [viewerTitle, setViewerTitle] = useState<string | undefined>(undefined);
   
+  const [dateFilter, setDateFilter] = useState<'all' | '7days' | 'month' | '3months'>('all');
+  const [viewingExpense, setViewingExpense] = useState<any | null>(null);
+
   const [queryParams, setQueryParams] = useState({
     page: 1,
     limit: 10,
     search: '',
     category: '',
     paymentMode: '',
+    startDate: '',
+    endDate: '',
+    sortBy: 'date',
+    sortOrder: 'desc',
   });
+
+  const handleDateFilterChange = (filter: 'all' | '7days' | 'month' | '3months') => {
+    setDateFilter(filter);
+    
+    let startDate = '';
+    let endDate = '';
+    
+    if (filter === '7days') {
+      startDate = dayjs().subtract(7, 'day').format('YYYY-MM-DD');
+      endDate = dayjs().format('YYYY-MM-DD');
+    } else if (filter === 'month') {
+      startDate = dayjs().startOf('month').format('YYYY-MM-DD');
+      endDate = dayjs().endOf('month').format('YYYY-MM-DD');
+    } else if (filter === '3months') {
+      startDate = dayjs().subtract(3, 'month').format('YYYY-MM-DD');
+      endDate = dayjs().format('YYYY-MM-DD');
+    }
+    
+    setQueryParams((prev) => ({
+      ...prev,
+      startDate,
+      endDate,
+      page: 1,
+    }));
+  };
 
   // Queries
   const { data: expensesData, isLoading: isLoadingExpenses, createExpense, deleteExpense } = useExpenses(queryParams);
@@ -179,14 +212,10 @@ export const Expenses: React.FC = () => {
     }
   };
 
-  const handleDeleteExpense = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this expense?')) return;
-    try {
-      await deleteExpense(id);
-      enqueueSnackbar('Expense deleted', { variant: 'info' });
-    } catch {
-      enqueueSnackbar('Failed to delete expense', { variant: 'error' });
-    }
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  const handleDeleteExpense = (id: string) => {
+    setDeleteConfirmId(id);
   };
 
   const handleDeleteIncome = async (id: string) => {
@@ -295,11 +324,52 @@ export const Expenses: React.FC = () => {
             {/* Clear Filters */}
             <Button
               variant="outline"
-              onClick={() => setQueryParams({ page: 1, limit: 10, search: '', category: '', paymentMode: '' })}
+              onClick={() => {
+                setDateFilter('all');
+                setQueryParams({
+                  page: 1,
+                  limit: 10,
+                  search: '',
+                  category: '',
+                  paymentMode: '',
+                  startDate: '',
+                  endDate: '',
+                  sortBy: 'date',
+                  sortOrder: 'desc',
+                });
+              }}
               className="h-10 text-xs font-sans"
             >
               Reset Filters
             </Button>
+          </div>
+
+          {/* Date Filters & Total Summary Header */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-card p-4 rounded-xl border my-4">
+            {/* Predefined Date Filters Dropdown */}
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <span className="text-sm font-semibold text-muted-foreground shrink-0">Date Filter:</span>
+              <select
+                value={dateFilter}
+                onChange={(e) => handleDateFilterChange(e.target.value as any)}
+                className="flex h-10 w-full md:w-48 rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none cursor-pointer"
+              >
+                <option value="all">All Expenses</option>
+                <option value="7days">Last 7 Days</option>
+                <option value="month">This Month</option>
+                <option value="3months">Last 3 Months</option>
+              </select>
+            </div>
+
+            {/* Total Expense Summary */}
+            <div className="flex items-center gap-2 self-start md:self-auto bg-primary/10 border border-primary/20 rounded-xl px-4 py-2">
+              <div className="flex flex-col text-left md:text-right">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-sans">Total Expense</span>
+                <span className="text-lg font-extrabold text-foreground font-sans whitespace-nowrap">
+                  {currency === 'INR' ? '₹' : currency} {(expensesData?.totalAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Expenses Table */}
@@ -315,14 +385,15 @@ export const Expenses: React.FC = () => {
                 className="border-none py-16"
               />
             ) : (
-              <div className="overflow-x-auto">
+              <>
+                <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left border-collapse">
                   <thead>
                     <tr className="border-b bg-muted/30">
-                      <th className="p-4 font-semibold text-muted-foreground">Title / Details</th>
-                      <th className="p-4 font-semibold text-muted-foreground">Category</th>
+                      <th className="p-4 font-semibold text-muted-foreground w-[50%] md:w-auto">Expense Name</th>
+                      <th className="p-4 font-semibold text-muted-foreground hidden md:table-cell">Category</th>
                       <th className="p-4 font-semibold text-muted-foreground">Amount</th>
-                      <th className="p-4 font-semibold text-muted-foreground">Payment</th>
+                      <th className="p-4 font-semibold text-muted-foreground hidden md:table-cell">Payment</th>
                       <th className="p-4 font-semibold text-muted-foreground">Receipt</th>
                       <th className="p-4 font-semibold text-muted-foreground">Actions</th>
                     </tr>
@@ -343,7 +414,7 @@ export const Expenses: React.FC = () => {
                             </div>
                           )}
                         </td>
-                        <td className="p-4 text-left">
+                        <td className="p-4 text-left hidden md:table-cell">
                           {item.category && (
                             <Badge
                               style={{
@@ -360,40 +431,100 @@ export const Expenses: React.FC = () => {
                         <td className="p-4 font-bold font-sans">
                           {currency} {item.amount.toLocaleString()}
                         </td>
-                        <td className="p-4 text-left uppercase text-xs font-semibold text-muted-foreground">
+                        <td className="p-4 text-left uppercase text-xs font-semibold text-muted-foreground hidden md:table-cell">
                           {item.paymentMode.replace('_', ' ')}
                         </td>
-                        <td className="p-4 text-left">
-                          {item.receiptImage && item.receiptImage !== 'null' ? (
-                            <button
-                              onClick={() => {
-                                setViewerUrl(getFileUrl(item.receiptImage));
-                                setViewerTitle(`Receipt: ${item.title}`);
-                                setIsViewerOpen(true);
-                              }}
-                              className="inline-flex items-center gap-1 text-primary hover:underline font-medium text-xs font-sans bg-transparent border-0 cursor-pointer p-0"
-                            >
-                              <ImageIcon className="h-3.5 w-3.5" /> View Bill
-                            </button>
-                          ) : (
-                            <span className="text-xs text-muted-foreground font-sans italic">None</span>
-                          )}
+                        <td className="p-4 text-left font-sans">
+                          <button
+                            onClick={() => {
+                              setViewerUrl(item.receiptImage && item.receiptImage !== 'null' ? getFileUrl(item.receiptImage) : undefined);
+                              setViewerTitle(`Receipt: ${item.title}`);
+                              setIsViewerOpen(true);
+                            }}
+                            className="inline-flex items-center gap-1 text-black hover:text-primary hover:underline font-medium text-xs bg-transparent border-0 cursor-pointer p-0"
+                          >
+                            <span role="img" aria-label="receipt" className="text-sm">📄</span>
+                            <span className="text-black font-semibold truncate max-w-[120px] block">
+                              {item.receiptImage && item.receiptImage !== 'null'
+                                ? item.receiptImage.split('/').pop()?.split('-').slice(1).join('-') || 'Receipt'
+                                : 'No Receipt'
+                              }
+                            </span>
+                          </button>
                         </td>
                         <td className="p-4 text-left">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteExpense(item._id)}
-                            className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setViewingExpense(item)}
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
+                              title="View Details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteExpense(item._id)}
+                              className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                              title="Delete Expense"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination Controls */}
+              {expensesData && expensesData.totalPages > 1 && (
+                <div className="flex items-center justify-between border-t p-4 bg-muted/20 font-sans">
+                  <span className="text-xs text-muted-foreground">
+                    Showing page {expensesData.page} of {expensesData.totalPages} ({expensesData.total} total expenses)
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={expensesData.page <= 1}
+                      onClick={() => setQueryParams((prev) => ({ ...prev, page: prev.page - 1 }))}
+                      className="h-8 text-xs cursor-pointer"
+                    >
+                      Previous
+                    </Button>
+                    {Array.from({ length: expensesData.totalPages }, (_, i) => i + 1).map((p) => {
+                      const isCurrent = p === queryParams.page;
+                      return (
+                        <button
+                          key={p}
+                          onClick={() => setQueryParams((prev) => ({ ...prev, page: p }))}
+                          className={`h-8 w-8 text-xs font-semibold rounded-lg transition-all border cursor-pointer ${
+                            isCurrent
+                              ? 'bg-primary text-[#141414] border-primary font-bold shadow-sm'
+                              : 'bg-background hover:bg-muted text-muted-foreground border-border'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      );
+                    })}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={expensesData.page >= expensesData.totalPages}
+                      onClick={() => setQueryParams((prev) => ({ ...prev, page: prev.page + 1 }))}
+                      className="h-8 text-xs cursor-pointer"
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+              </>
             )}
           </div>
         </>
@@ -607,6 +738,169 @@ export const Expenses: React.FC = () => {
         fileUrl={viewerUrl}
         title={viewerTitle}
       />
+
+      {/* VIEW EXPENSE DETAILS DIALOG */}
+      <Dialog
+        isOpen={!!viewingExpense}
+        onClose={() => setViewingExpense(null)}
+        title="Expense Details"
+      >
+        {viewingExpense && (
+          <div className="space-y-4 text-left font-sans">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="text-lg font-bold text-foreground">{viewingExpense.title}</h3>
+                <span className="text-xs text-muted-foreground block mt-0.5 font-mono">ID: {viewingExpense._id}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-lg font-extrabold text-foreground block">
+                  {currency === 'INR' ? '₹' : currency} {viewingExpense.amount.toLocaleString()}
+                </span>
+                {viewingExpense.category && (
+                  <Badge
+                    style={{
+                      backgroundColor: `${viewingExpense.category.color}15`,
+                      color: viewingExpense.category.color,
+                      borderColor: `${viewingExpense.category.color}35`,
+                    }}
+                    className="font-semibold border mt-1"
+                  >
+                    {viewingExpense.category.name}
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-xs text-muted-foreground block">Expense Date</span>
+                <span className="font-medium text-foreground">
+                  {viewingExpense.date} {viewingExpense.time ? `@ ${viewingExpense.time}` : ''}
+                </span>
+              </div>
+              <div>
+                <span className="text-xs text-muted-foreground block">Payment Method</span>
+                <span className="font-medium text-foreground uppercase">
+                  {viewingExpense.paymentMode.replace('_', ' ')}
+                </span>
+              </div>
+              <div>
+                <span className="text-xs text-muted-foreground block">Vendor</span>
+                <span className="font-medium text-foreground">
+                  {viewingExpense.vendor || 'Not Specified'}
+                </span>
+              </div>
+              <div>
+                <span className="text-xs text-muted-foreground block">Created By</span>
+                <span className="font-medium text-foreground">
+                  {viewingExpense.createdBy?.name || 'Unknown'}
+                </span>
+              </div>
+              <div>
+                <span className="text-xs text-muted-foreground block">Created Date</span>
+                <span className="font-medium text-foreground">
+                  {dayjs(viewingExpense.createdAt).format('YYYY-MM-DD HH:mm:ss')}
+                </span>
+              </div>
+              <div>
+                <span className="text-xs text-muted-foreground block">Last Updated</span>
+                <span className="font-medium text-foreground">
+                  {dayjs(viewingExpense.updatedAt).format('YYYY-MM-DD HH:mm:ss')}
+                </span>
+              </div>
+            </div>
+
+            {viewingExpense.notes && (
+              <div className="border-t pt-3">
+                <span className="text-xs text-muted-foreground block">Description / Notes</span>
+                <p className="text-sm text-foreground mt-1 whitespace-pre-wrap bg-muted/30 p-2.5 rounded-lg border border-border/50">
+                  {viewingExpense.notes}
+                </p>
+              </div>
+            )}
+
+            {viewingExpense.tags && viewingExpense.tags.length > 0 && (
+              <div className="border-t pt-3">
+                <span className="text-xs text-muted-foreground block mb-1.5">Tags</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {viewingExpense.tags.map((t: string) => (
+                    <Badge key={t} variant="outline" className="text-xs py-0.5 px-2 font-mono">
+                      {t}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {viewingExpense.receiptImage && viewingExpense.receiptImage !== 'null' ? (
+              <div className="border-t pt-3 space-y-2">
+                <span className="text-xs text-muted-foreground block">Receipt Preview</span>
+                <div className="relative rounded-lg overflow-hidden border border-border bg-muted/20 flex flex-col items-center justify-center p-2">
+                  <img
+                    src={getFileUrl(viewingExpense.receiptImage)}
+                    alt={`Receipt for ${viewingExpense.title}`}
+                    className="max-h-60 object-contain rounded"
+                  />
+                  <div className="mt-2 w-full flex justify-end">
+                    <a
+                      href={getFileUrl(viewingExpense.receiptImage)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-semibold py-1 px-2.5 rounded bg-card border cursor-pointer"
+                    >
+                      Open in New Tab
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="border-t pt-3">
+                <span className="text-xs text-muted-foreground block">Receipt</span>
+                <span className="text-sm italic text-muted-foreground">No receipt attached</span>
+              </div>
+            )}
+
+            <div className="flex justify-end border-t pt-3 mt-4">
+              <Button onClick={() => setViewingExpense(null)}>Close</Button>
+            </div>
+          </div>
+        )}
+      </Dialog>
+
+      {/* DELETE CONFIRMATION DIALOG */}
+      <Dialog
+        isOpen={!!deleteConfirmId}
+        onClose={() => setDeleteConfirmId(null)}
+        title="Delete Expense"
+      >
+        <div className="space-y-4 text-left font-sans">
+          <p className="text-sm text-muted-foreground">
+            Are you sure you want to delete this expense? This action cannot be undone.
+          </p>
+          <div className="flex justify-end gap-3 pt-3 border-t">
+            <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-destructive hover:bg-destructive/90 text-white"
+              onClick={async () => {
+                if (deleteConfirmId) {
+                  try {
+                    await deleteExpense(deleteConfirmId);
+                    enqueueSnackbar('Expense deleted successfully', { variant: 'success' });
+                  } catch {
+                    enqueueSnackbar('Failed to delete expense', { variant: 'error' });
+                  }
+                  setDeleteConfirmId(null);
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 };

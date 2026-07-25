@@ -22,7 +22,14 @@ export interface InventoryInput {
   status?: 'working' | 'repair' | 'disposed';
 }
 
-export const useRoom = () => {
+export interface RoomQueryParams {
+  startDate?: string;
+  endDate?: string;
+  sortBy?: string;
+  sortOrder?: string;
+}
+
+export const useRoom = (purchaseParams?: RoomQueryParams) => {
   const queryClient = useQueryClient();
 
   const rentsQuery = useQuery({
@@ -42,9 +49,9 @@ export const useRoom = () => {
   });
 
   const purchasesQuery = useQuery({
-    queryKey: ['roomPurchases'],
+    queryKey: ['roomPurchases', purchaseParams],
     queryFn: async () => {
-      const response = await axiosInstance.get('/room/purchases');
+      const response = await axiosInstance.get('/room/purchases', { params: purchaseParams });
       return response.data;
     },
   });
@@ -148,6 +155,17 @@ export const useRoom = () => {
     },
   });
 
+  const deletePurchaseMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await axiosInstance.delete(`/room/purchases/${id}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['roomPurchases'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
+
   return {
     rents: rentsQuery.data || [],
     bills: billsQuery.data || [],
@@ -162,6 +180,7 @@ export const useRoom = () => {
     createBill: createBillMutation.mutateAsync,
     payBill: payBillMutation.mutateAsync,
     createPurchase: createPurchaseMutation.mutateAsync,
+    deletePurchase: deletePurchaseMutation.mutateAsync,
     createInventoryItem: createInventoryMutation.mutateAsync,
     updateInventoryItem: updateInventoryMutation.mutateAsync,
     deleteInventoryItem: deleteInventoryMutation.mutateAsync,

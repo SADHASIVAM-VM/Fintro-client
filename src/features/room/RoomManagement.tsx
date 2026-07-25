@@ -89,10 +89,40 @@ export const RoomManagement: React.FC = () => {
   const [viewerTitle, setViewerTitle] = useState<string | undefined>(undefined);
 
   // Queries
+  const [purchaseDateFilter, setPurchaseDateFilter] = useState<'all' | '7days' | 'month' | '3months'>('all');
+  const [purchaseQueryParams, setPurchaseQueryParams] = useState({
+    startDate: '',
+    endDate: '',
+  });
+  const [purchaseDeleteConfirmId, setPurchaseDeleteConfirmId] = useState<string | null>(null);
+
+  const handlePurchaseDateFilterChange = (filter: 'all' | '7days' | 'month' | '3months') => {
+    setPurchaseDateFilter(filter);
+    
+    let startDate = '';
+    let endDate = '';
+    
+    if (filter === '7days') {
+      startDate = dayjs().subtract(7, 'day').format('YYYY-MM-DD');
+      endDate = dayjs().format('YYYY-MM-DD');
+    } else if (filter === 'month') {
+      startDate = dayjs().startOf('month').format('YYYY-MM-DD');
+      endDate = dayjs().endOf('month').format('YYYY-MM-DD');
+    } else if (filter === '3months') {
+      startDate = dayjs().subtract(3, 'month').format('YYYY-MM-DD');
+      endDate = dayjs().format('YYYY-MM-DD');
+    }
+    
+    setPurchaseQueryParams({
+      startDate,
+      endDate,
+    });
+  };
+
   const {
     rents,
     bills,
-    purchases,
+    purchases: purchasesData,
     inventory,
     isLoadingRents,
     isLoadingBills,
@@ -103,10 +133,18 @@ export const RoomManagement: React.FC = () => {
     createBill,
     payBill,
     createPurchase,
+    deletePurchase,
     createInventoryItem,
     updateInventoryItem,
     deleteInventoryItem,
-  } = useRoom();
+  } = useRoom(purchaseQueryParams);
+
+  const purchasesList = (purchasesData as any)?.data || [];
+  const totalPurchaseAmount = (purchasesData as any)?.totalAmount || 0;
+
+  const handleDeletePurchase = (id: string) => {
+    setPurchaseDeleteConfirmId(id);
+  };
 
   const { data: settings } = useSettings();
   const currency = settings?.currency || 'INR';
@@ -402,66 +440,110 @@ export const RoomManagement: React.FC = () => {
 
       {/* Shared purchases Grid view */}
       {activeTab === 'purchases' && (
-        <Card>
-          <CardContent className="p-0">
-            {isLoadingPurchases ? (
-              <div className="py-20 flex justify-center"><LoadingSpinner /></div>
-            ) : purchases.length === 0 ? (
-              <div className="py-12 text-center text-muted-foreground font-sans">No shared purchases logged.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left border-collapse">
-                  <thead>
-                    <tr className="border-b bg-muted/30">
-                      <th className="p-4 font-semibold text-muted-foreground">Item Name</th>
-                      <th className="p-4 font-semibold text-muted-foreground">Price</th>
-                      <th className="p-4 font-semibold text-muted-foreground">Quantity</th>
-                      <th className="p-4 font-semibold text-muted-foreground">Category</th>
-                      <th className="p-4 font-semibold text-muted-foreground">Date</th>
-                      <th className="p-4 font-semibold text-muted-foreground">Warranty</th>
-                      <th className="p-4 font-semibold text-muted-foreground">Invoice</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {purchases.map((p: any) => (
-                      <tr key={p._id} className="border-b hover:bg-muted/50 transition-colors">
-                        <td className="p-4 font-semibold">
-                          <span>{p.name}</span>
-                          {p.shop && <span className="text-[10px] text-muted-foreground block font-sans font-medium mt-0.5">Shop: {p.shop}</span>}
-                        </td>
-                        <td className="p-4 font-sans font-bold">{currency} {p.price.toLocaleString()}</td>
-                        <td className="p-4 font-sans">{p.quantity}</td>
-                        <td className="p-4">
-                          <Badge variant="outline" className="capitalize text-xs">{p.category}</Badge>
-                        </td>
-                        <td className="p-4 font-sans">{p.date}</td>
-                        <td className="p-4 font-sans text-xs text-muted-foreground">
-                          {p.warrantyMonths ? `${p.warrantyMonths} Months` : 'None'}
-                        </td>
-                        <td className="p-4 text-left">
-                          {p.billImage && p.billImage !== 'null' ? (
+        <>
+          {/* Purchase Date Filter Header */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-card p-4 rounded-xl border mb-4">
+            {/* Dropdown Selector */}
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <span className="text-sm font-semibold text-muted-foreground shrink-0">Date Filter:</span>
+              <select
+                value={purchaseDateFilter}
+                onChange={(e) => handlePurchaseDateFilterChange(e.target.value as any)}
+                className="flex h-10 w-full md:w-48 rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none cursor-pointer font-sans"
+              >
+                <option value="all">All Purchases</option>
+                <option value="7days">Last 7 Days</option>
+                <option value="month">This Month</option>
+                <option value="3months">Last 3 Months</option>
+              </select>
+            </div>
+
+            {/* Total Purchases Summary */}
+            <div className="flex items-center gap-2 self-start md:self-auto bg-primary/10 border border-primary/20 rounded-xl px-4 py-2">
+              <div className="flex flex-col text-left md:text-right">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-sans">Total Purchase</span>
+                <span className="text-lg font-extrabold text-foreground font-sans whitespace-nowrap">
+                  {currency === 'INR' ? '₹' : currency} {totalPurchaseAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <Card>
+            <CardContent className="p-0">
+              {isLoadingPurchases ? (
+                <div className="py-20 flex justify-center"><LoadingSpinner /></div>
+              ) : purchasesList.length === 0 ? (
+                <div className="py-12 text-center text-muted-foreground font-sans">No shared purchases logged.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left border-collapse">
+                    <thead>
+                      <tr className="border-b bg-muted/30">
+                        <th className="p-4 font-semibold text-muted-foreground">Item Name</th>
+                        <th className="p-4 font-semibold text-muted-foreground">Price</th>
+                        <th className="p-4 font-semibold text-muted-foreground">Quantity</th>
+                        <th className="p-4 font-semibold text-muted-foreground">Category</th>
+                        <th className="p-4 font-semibold text-muted-foreground">Date</th>
+                        <th className="p-4 font-semibold text-muted-foreground">Warranty</th>
+                        <th className="p-4 font-semibold text-muted-foreground">Invoice</th>
+                        <th className="p-4 font-semibold text-muted-foreground">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {purchasesList.map((p: any) => (
+                        <tr key={p._id} className="border-b hover:bg-muted/50 transition-colors">
+                          <td className="p-4 font-semibold">
+                            <span>{p.name}</span>
+                            {p.shop && <span className="text-[10px] text-muted-foreground block font-sans font-medium mt-0.5">Shop: {p.shop}</span>}
+                          </td>
+                          <td className="p-4 font-sans font-bold">{currency} {p.price.toLocaleString()}</td>
+                          <td className="p-4 font-sans">{p.quantity}</td>
+                          <td className="p-4">
+                            <Badge variant="outline" className="capitalize text-xs">{p.category}</Badge>
+                          </td>
+                          <td className="p-4 font-sans">{p.date}</td>
+                          <td className="p-4 font-sans text-xs text-muted-foreground">
+                            {p.warrantyMonths ? `${p.warrantyMonths} Months` : 'None'}
+                          </td>
+                          <td className="p-4 text-left font-sans">
                             <button
                               onClick={() => {
-                                setViewerUrl(getFileUrl(p.billImage));
+                                setViewerUrl(p.billImage && p.billImage !== 'null' ? getFileUrl(p.billImage) : undefined);
                                 setViewerTitle(`Invoice: ${p.name}`);
                                 setIsViewerOpen(true);
                               }}
-                              className="inline-flex items-center gap-1 text-primary hover:underline font-medium text-xs font-sans bg-transparent border-0 cursor-pointer p-0"
+                              className="inline-flex items-center gap-1 text-black hover:text-primary hover:underline font-medium text-xs bg-transparent border-0 cursor-pointer p-0 font-sans"
                             >
-                              <ImageIcon className="h-3.5 w-3.5" /> View Invoice
+                              <span role="img" aria-label="bill" className="text-sm">📄</span>
+                              <span className="text-black font-semibold truncate max-w-[120px] block">
+                                {p.billImage && p.billImage !== 'null'
+                                  ? p.billImage.split('/').pop()?.split('-').slice(1).join('-') || 'Invoice'
+                                  : 'No Invoice'
+                                }
+                              </span>
                             </button>
-                          ) : (
-                            <span className="text-xs text-muted-foreground font-sans italic">None</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                          </td>
+                          <td className="p-4 text-left">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeletePurchase(p._id)}
+                              className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                              title="Delete Purchase"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </>
       )}
 
       {/* Asset Inventory Grid view */}
@@ -657,6 +739,41 @@ export const RoomManagement: React.FC = () => {
         fileUrl={viewerUrl}
         title={viewerTitle}
       />
+
+      {/* DELETE CONFIRMATION DIALOG */}
+      <Dialog
+        isOpen={!!purchaseDeleteConfirmId}
+        onClose={() => setPurchaseDeleteConfirmId(null)}
+        title="Delete Purchase"
+      >
+        <div className="space-y-4 text-left font-sans">
+          <p className="text-sm text-muted-foreground">
+            Are you sure you want to delete this purchase? This action cannot be undone.
+          </p>
+          <div className="flex justify-end gap-3 pt-3 border-t">
+            <Button variant="outline" onClick={() => setPurchaseDeleteConfirmId(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-destructive hover:bg-destructive/90 text-white"
+              onClick={async () => {
+                if (purchaseDeleteConfirmId) {
+                  try {
+                    await deletePurchase(purchaseDeleteConfirmId);
+                    enqueueSnackbar('Purchase deleted successfully', { variant: 'success' });
+                  } catch {
+                    enqueueSnackbar('Failed to delete purchase', { variant: 'error' });
+                  }
+                  setPurchaseDeleteConfirmId(null);
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 };

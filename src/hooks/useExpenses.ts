@@ -9,6 +9,8 @@ export interface ExpenseParams {
   paymentMode?: string;
   startDate?: string;
   endDate?: string;
+  sortBy?: string;
+  sortOrder?: string;
 }
 
 export const useExpenses = (params: ExpenseParams) => {

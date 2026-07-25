@@ -27,10 +27,9 @@ export const BillViewer: React.FC<BillViewerProps> = ({
     }
   }, [isOpen, fileUrl]);
 
-  if (!fileUrl) return null;
-
+  const hasFile = fileUrl && fileUrl !== 'null' && fileUrl !== '';
   // Detect file type
-  const cleanUrl = fileUrl.toLowerCase().split('?')[0];
+  const cleanUrl = hasFile ? fileUrl.toLowerCase().split('?')[0] : '';
   const isPdf = cleanUrl.endsWith('.pdf');
 
   const handleZoomIn = () => setScale(prev => Math.min(prev + 0.25, 4));
@@ -48,20 +47,26 @@ export const BillViewer: React.FC<BillViewerProps> = ({
       title={
         <div className="flex items-center justify-between w-full pr-8">
           <span className="font-sans font-semibold text-foreground text-base">{title}</span>
-          <a
-            href={fileUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-normal font-sans ml-4"
-          >
-            <ExternalLink className="h-3.5 w-3.5" /> Open in New Tab
-          </a>
+          {hasFile && (
+            <a
+              href={fileUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-normal font-sans ml-4"
+            >
+              <ExternalLink className="h-3.5 w-3.5" /> Open in New Tab
+            </a>
+          )}
         </div>
       }
       className="max-w-4xl w-full"
     >
       <div className="flex flex-col gap-4">
-        {isPdf ? (
+        {!hasFile ? (
+          <div className="flex flex-col items-center justify-center min-h-[40vh] p-6 text-center border-2 border-dashed rounded-xl bg-muted/5 font-sans">
+            <span className="text-sm font-medium text-muted-foreground">Receipt not available.</span>
+          </div>
+        ) : isPdf ? (
           /* PDF Viewer */
           <div className="w-full h-[65vh] rounded-lg border overflow-hidden bg-muted/5">
             <iframe
