@@ -269,10 +269,11 @@ export const DashboardLayout: React.FC = () => {
                   className="relative flex items-center justify-center p-1 transition-all duration-200"
                 >
                   <div
-                    className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${isActive
-                      ? `${item.isMid ? "bg-gradient-to-bl from-yellow-700 to-yellow-500" : "bg-purple-300 text-white "}`
-                      : `${item.isMid && "bg-gradient-to-br from-yellow-600 to-yellow-300"}'bg-[#18181B] text-white dark:bg-white dark:text-zinc-900 shadow-md hover:scale-105`
-                      }`}
+                    className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+                      isActive
+                        ? "bg-gradient-to-bl from-yellow-700 to-yellow-500 text-white shadow-lg"
+                        : "bg-gradient-to-br from-yellow-600 to-yellow-300 text-white shadow-md hover:scale-105"
+                    }`}
                   >
                     <Icon className="h-5 w-5" />
                   </div>
