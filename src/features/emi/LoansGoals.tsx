@@ -5,27 +5,24 @@ import * as z from 'zod';
 import { useSnackbar } from 'notistack';
 import {
   PiggyBank,
-  Percent,
   Plus,
-  Calendar,
-  AlertCircle,
-  Award,
   Trash2,
   CheckCircle2,
-  TrendingUp,
+  Landmark,
+  Target,
+  Clock,
+  ChevronRight
 } from 'lucide-react';
 import { useEmi } from '@/hooks/useEmi';
 import { useSavings } from '@/hooks/useSavings';
 import { useSettings } from '@/hooks/useSettings';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Dialog } from '@/components/ui/Dialog';
-import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Helmet } from 'react-helmet-async';
-import dayjs from 'dayjs';
 
 // Schemas
 const emiSchema = z.object({
@@ -68,7 +65,7 @@ export const LoansGoals: React.FC = () => {
   const { data: savings = [], isLoading: isLoadingSavings, createSavingsGoal, updateSavingsProgress, deleteSavingsGoal } = useSavings();
   const { data: settings } = useSettings();
 
-  const currency = settings?.currency || 'INR';
+  const currency = settings?.data?.currency === 'USD' || settings?.currency === 'USD' ? '$' : '₹';
 
   // Forms
   const { register: regEmi, handleSubmit: handleEmi, reset: resetEmi, formState: { errors: emiErr, isSubmitting: isSubmittingEmi } } = useForm<EmiSchema>({ resolver: zodResolver(emiSchema) });
@@ -85,7 +82,7 @@ export const LoansGoals: React.FC = () => {
         dueDate: data.dueDate,
         startDate: data.startDate,
       });
-      enqueueSnackbar('Loan details added', { variant: 'success' });
+      enqueueSnackbar('Loan details added successfully', { variant: 'success' });
       setIsEmiOpen(false);
       resetEmi();
     } catch {
@@ -102,7 +99,7 @@ export const LoansGoals: React.FC = () => {
         targetDate: data.targetDate,
         interval: data.interval,
       });
-      enqueueSnackbar('Savings goal logged', { variant: 'success' });
+      enqueueSnackbar('Savings goal logged successfully', { variant: 'success' });
       setIsSavingsOpen(false);
       resetSavings();
     } catch {
@@ -160,135 +157,147 @@ export const LoansGoals: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 text-left">
+    <div className="space-y-6 text-left font-sans pb-16 max-w-xl mx-auto animate-fade-in">
       <Helmet>
-        <title>Loans & Savings Goals | Fintro</title>
+        <title>Loans & Savings Goals — Fintro</title>
       </Helmet>
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header Banner */}
+      <div className="flex items-center justify-between pt-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Loans & Savings Goals</h1>
-          <p className="text-muted-foreground text-sm font-sans mt-0.5">
-            Track principal interest loans, pay monthly EMIs, and monitor savings milestones.
+          <h1 className="text-xl font-extrabold text-zinc-900 dark:text-white">Loans & Savings</h1>
+          <p className="text-xs text-zinc-400 font-medium mt-0.5">
+            Monitor bank EMIs, loans, and target savings goals
           </p>
         </div>
-        <div>
-          {activeTab === 'emis' ? (
-            <Button variant="primary" onClick={() => setIsEmiOpen(true)} className="gap-1.5 font-sans">
-              <Plus className="h-4 w-4" /> Add Loan
-            </Button>
-          ) : (
-            <Button variant="primary" onClick={() => setIsSavingsOpen(true)} className="gap-1.5 font-sans">
-              <Plus className="h-4 w-4" /> Add Goal
-            </Button>
-          )}
-        </div>
+
+        {/* Compact Responsive Buttons: Icon-Only on Mobile (`< sm`), Icon + Text on Desktop (`sm:`) */}
+        {activeTab === 'emis' ? (
+          <button
+            onClick={() => setIsEmiOpen(true)}
+            className="inline-flex items-center gap-1.5 p-2.5 sm:px-4 sm:py-2 rounded-full bg-[#18181B] text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 text-xs font-extrabold transition-all shadow-md cursor-pointer shrink-0"
+            title="Add Loan"
+          >
+            <Plus className="w-4 h-4 shrink-0" />
+            <span className="hidden sm:inline">Add Loan</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => setIsSavingsOpen(true)}
+            className="inline-flex items-center gap-1.5 p-2.5 sm:px-4 sm:py-2 rounded-full bg-[#18181B] text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 text-xs font-extrabold transition-all shadow-md cursor-pointer shrink-0"
+            title="Add Goal"
+          >
+            <Plus className="w-4 h-4 shrink-0" />
+            <span className="hidden sm:inline">Add Goal</span>
+          </button>
+        )}
       </div>
 
-      {/* Tab Selectors */}
-      <div className="inline-flex h-11 items-center justify-start rounded-full bg-muted p-1 text-muted-foreground self-start border border-border gap-1">
-        <button
-          onClick={() => setActiveTab('emis')}
-          className={`inline-flex items-center justify-center whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 cursor-pointer ${
-            activeTab === 'emis'
-              ? 'bg-primary text-[#141414] shadow-sm font-semibold'
-              : 'hover:bg-card/50 hover:text-foreground'
-          }`}
-        >
-          EMI Loans
-        </button>
-        <button
-          onClick={() => setActiveTab('savings')}
-          className={`inline-flex items-center justify-center whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 cursor-pointer ${
-            activeTab === 'savings'
-              ? 'bg-primary text-[#141414] shadow-sm font-semibold'
-              : 'hover:bg-card/50 hover:text-foreground'
-          }`}
-        >
-          Savings Goals
-        </button>
-      </div>
+      {/* Segmented Control Sub-Tabs */}
+      <SegmentedControl
+        options={[
+          { id: 'emis', label: 'EMI Loans' },
+          { id: 'savings', label: 'Savings Goals' },
+        ]}
+        activeId={activeTab}
+        onChange={(id) => setActiveTab(id as any)}
+      />
 
       {/* EMIS LIST */}
       {activeTab === 'emis' && (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-4">
           {isLoadingEmis ? (
-            <div className="col-span-2 py-10 flex justify-center"><LoadingSpinner /></div>
+            <div className="py-12 flex justify-center"><LoadingSpinner /></div>
           ) : emis.length === 0 ? (
-            <div className="col-span-2">
-              <EmptyState
-                title="No active loans"
-                description="Keep track of your bank interest loans, monthly EMIs, remaining payments, and next due alarm dates."
-                actionLabel="Log New Loan"
-                onAction={() => setIsEmiOpen(true)}
-              />
-            </div>
+            <EmptyState
+              title="No active loans"
+              description="Keep track of your monthly EMIs, interest rates, and remaining balance."
+              actionLabel="Log New Loan"
+              onAction={() => setIsEmiOpen(true)}
+              className="py-12"
+            />
           ) : (
             emis.map((emi: any) => {
               const progressPct = Math.round((emi.monthsPaid / emi.monthsTotal) * 100);
               const isFullyPaid = emi.monthsPaid >= emi.monthsTotal;
 
               return (
-                <Card key={emi._id} className="text-left relative overflow-hidden">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{emi.loanName}</CardTitle>
-                      <Badge variant="outline" className={isFullyPaid ? 'text-green-600 bg-green-50' : 'text-yellow-600 bg-yellow-50'}>
-                        {isFullyPaid ? 'Completed' : `Due: ${emi.dueDate}`}
-                      </Badge>
-                    </div>
-                    <CardDescription className="font-sans">
-                      Principal: {currency} {emi.principal.toLocaleString()} @ {emi.interestRate}% Interest
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-2 text-sm font-sans">
-                      <div>
-                        <span className="text-muted-foreground block text-xs">Monthly EMI</span>
-                        <span className="font-bold text-foreground">{currency} {emi.monthlyEmi.toLocaleString()}</span>
+                <div
+                  key={emi._id}
+                  className="relative w-full rounded-3xl bg-white dark:bg-zinc-900 p-5 shadow-sm border border-zinc-200/80 dark:border-zinc-800 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent dark:from-indigo-950/20 dark:via-purple-950/10 dark:to-transparent space-y-4 transition-all"
+                >
+                  {/* Card Header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                        <Landmark className="w-5 h-5" />
                       </div>
                       <div>
-                        <span className="text-muted-foreground block text-xs">Remaining Balance</span>
-                        <span className="font-bold text-foreground">{currency} {emi.remainingBalance.toLocaleString()}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground block text-xs">Paid Months</span>
-                        <span className="font-semibold text-foreground">{emi.monthsPaid} / {emi.monthsTotal} Months</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground block text-xs">Start Date</span>
-                        <span className="font-semibold text-foreground">{emi.startDate}</span>
+                        <h3 className="text-base font-extrabold text-zinc-900 dark:text-white leading-tight">{emi.loanName}</h3>
+                        <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5">
+                          {emi.interestRate}% Rate · Start: {emi.startDate}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Progress Bar */}
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs font-sans font-semibold text-muted-foreground">
-                        <span>Paid Balance</span>
-                        <span>{progressPct}% Paid</span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div
-                          className="bg-primary h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${progressPct}%` }}
-                        ></div>
-                      </div>
+                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${isFullyPaid ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400'}`}>
+                      {isFullyPaid ? 'Completed' : `Due: ${emi.dueDate}`}
+                    </span>
+                  </div>
+
+                  {/* Financial Metrics Row */}
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div className="bg-zinc-50 dark:bg-zinc-800/60 p-3 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60">
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 block tracking-wider">Monthly EMI</span>
+                      <span className="text-base font-black text-zinc-900 dark:text-white mt-0.5 block truncate">
+                        {currency}{emi.monthlyEmi.toLocaleString()}
+                      </span>
                     </div>
 
-                    {/* Action buttons */}
-                    <div className="flex justify-between items-center border-t pt-3 mt-4">
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteEmi(emi._id)} className="text-destructive hover:bg-destructive/10">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                      {!isFullyPaid && (
-                        <Button variant="outline" size="sm" onClick={() => handlePayEmi(emi._id)} className="font-sans text-xs">
-                          Log Next EMI Payment
-                        </Button>
-                      )}
+                    <div className="bg-zinc-50 dark:bg-zinc-800/60 p-3 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60">
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 block tracking-wider">Remaining Balance</span>
+                      <span className="text-base font-black text-zinc-900 dark:text-white mt-0.5 block truncate">
+                        {currency}{emi.remainingBalance.toLocaleString()}
+                      </span>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex justify-between text-xs font-bold text-zinc-500 dark:text-zinc-400">
+                      <span>Schedule: {emi.monthsPaid} / {emi.monthsTotal} Months</span>
+                      <span className="text-indigo-600 dark:text-indigo-400 font-extrabold">{progressPct}% Paid</span>
+                    </div>
+                    <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-between items-center pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteEmi(emi._id)}
+                      className="text-zinc-400 hover:text-rose-500 p-1.5 cursor-pointer transition-colors"
+                      title="Delete Loan"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+
+                    {!isFullyPaid && (
+                      <button
+                        type="button"
+                        onClick={() => handlePayEmi(emi._id)}
+                        className="px-4 py-2 rounded-full bg-[#18181B] text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 text-xs font-extrabold transition-all cursor-pointer shadow-sm"
+                      >
+                        Log Next EMI Payment
+                      </button>
+                    )}
+                  </div>
+                </div>
               );
             })
           )}
@@ -297,78 +306,91 @@ export const LoansGoals: React.FC = () => {
 
       {/* SAVINGS GOALS */}
       {activeTab === 'savings' && (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-4">
           {isLoadingSavings ? (
-            <div className="col-span-2 py-10 flex justify-center"><LoadingSpinner /></div>
+            <div className="py-12 flex justify-center"><LoadingSpinner /></div>
           ) : savings.length === 0 ? (
-            <div className="col-span-2">
-              <EmptyState
-                title="No savings goals"
-                description="Define long term target goals (e.g. down payment, travel, emergency cash reserves) and track progress."
-                actionLabel="Create Savings Goal"
-                onAction={() => setIsSavingsOpen(true)}
-              />
-            </div>
+            <EmptyState
+              title="No savings goals"
+              description="Define long term target goals and track progress."
+              actionLabel="Create Savings Goal"
+              onAction={() => setIsSavingsOpen(true)}
+              className="py-12"
+            />
           ) : (
             savings.map((goal: any) => {
               const pct = Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100));
-              const isGoalMet = goal.currentAmount >= goal.targetAmount;
 
               return (
-                <Card key={goal._id} className="text-left relative overflow-hidden">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{goal.title}</CardTitle>
-                      <Badge variant="outline" className="capitalize text-xs font-semibold bg-muted">
-                        {goal.interval}
-                      </Badge>
-                    </div>
-                    <CardDescription className="font-sans">
-                      Milestone Target: {goal.targetDate}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex justify-between items-end">
+                <div
+                  key={goal._id}
+                  className="bg-white dark:bg-zinc-900 rounded-3xl p-5 shadow-sm border border-zinc-200/80 dark:border-zinc-800 bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-transparent dark:from-emerald-950/20 dark:via-teal-950/10 dark:to-transparent space-y-4 transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                        <Target className="w-5 h-5" />
+                      </div>
                       <div>
-                        <span className="text-xs text-muted-foreground block font-sans">Current Saved</span>
-                        <span className="text-lg font-bold font-sans text-foreground">
-                          {currency} {goal.currentAmount.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xs text-muted-foreground block font-sans">Target Amount</span>
-                        <span className="text-base font-semibold font-sans text-muted-foreground">
-                          {currency} {goal.targetAmount.toLocaleString()}
-                        </span>
+                        <h3 className="text-base font-extrabold text-zinc-900 dark:text-white leading-tight">{goal.title}</h3>
+                        <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5">Target Date: {goal.targetDate}</p>
                       </div>
                     </div>
 
-                    {/* Progress Bar */}
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs font-sans font-semibold text-muted-foreground">
-                        <span>Savings Level</span>
-                        <span>{pct}%</span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div
-                          className="bg-green-500 h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${pct}%` }}
-                        ></div>
-                      </div>
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 capitalize">
+                      {goal.interval}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-end pt-1">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">Current Saved</span>
+                      <span className="text-xl font-black text-zinc-900 dark:text-white mt-0.5 block truncate">
+                        {currency}{goal.currentAmount.toLocaleString()}
+                      </span>
                     </div>
 
-                    <div className="flex justify-between items-center border-t pt-3 mt-4">
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteGoal(goal._id)} className="text-destructive hover:bg-destructive/10">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => triggerAdjustProgress(goal._id)} className="font-sans text-xs">
-                          Add Funds
-                        </Button>
-                      </div>
+                    <div className="text-right">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">Target Milestone</span>
+                      <span className="text-sm font-extrabold text-zinc-500 dark:text-zinc-400 mt-0.5 block truncate">
+                        {currency}{goal.targetAmount.toLocaleString()}
+                      </span>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-bold text-zinc-500 dark:text-zinc-400">
+                      <span>Savings Level</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{pct}%</span>
+                    </div>
+                    <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteGoal(goal._id)}
+                      className="text-zinc-400 hover:text-rose-500 p-1.5 cursor-pointer transition-colors"
+                      title="Delete Goal"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => triggerAdjustProgress(goal._id)}
+                      className="px-4 py-2 rounded-full bg-[#18181B] text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 text-xs font-extrabold transition-all cursor-pointer shadow-sm"
+                    >
+                      Add Funds
+                    </button>
+                  </div>
+                </div>
               );
             })
           )}
@@ -377,16 +399,16 @@ export const LoansGoals: React.FC = () => {
 
       {/* EMI DIALOG */}
       <Dialog isOpen={isEmiOpen} onClose={() => setIsEmiOpen(false)} title="Log New EMI Loan">
-        <form onSubmit={handleEmi(onSubmitEmi)} className="space-y-4 text-left">
+        <form onSubmit={handleEmi(onSubmitEmi)} className="space-y-4 text-left font-sans pt-1">
           <Input label="Loan Name" placeholder="e.g. Home Loan, Car Loan, iPad EMI" error={emiErr.loanName?.message} {...regEmi('loanName')} />
-          
+
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Principal Amount" placeholder="0.00" error={emiErr.principal?.message} {...regEmi('principal')} />
+            <Input label={`Principal (${currency})`} placeholder="0.00" error={emiErr.principal?.message} {...regEmi('principal')} />
             <Input label="Interest Rate (%)" placeholder="e.g. 8.5" error={emiErr.interestRate?.message} {...regEmi('interestRate')} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Monthly EMI Amount" placeholder="0.00" error={emiErr.monthlyEmi?.message} {...regEmi('monthlyEmi')} />
+            <Input label={`Monthly EMI (${currency})`} placeholder="0.00" error={emiErr.monthlyEmi?.message} {...regEmi('monthlyEmi')} />
             <Input label="Total Months Schedule" placeholder="e.g. 12, 24, 60" error={emiErr.monthsTotal?.message} {...regEmi('monthsTotal')} />
           </div>
 
@@ -395,8 +417,11 @@ export const LoansGoals: React.FC = () => {
             <Input label="First Due Date" type="date" error={emiErr.dueDate?.message} {...regEmi('dueDate')} />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="submit" disabled={isSubmittingEmi}>
+          <div className="pt-3 flex items-center justify-end gap-3 border-t border-zinc-100 dark:border-zinc-800">
+            <Button type="button" variant="outline" onClick={() => setIsEmiOpen(false)} className="rounded-full text-xs">
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmittingEmi} className="rounded-full font-bold text-xs bg-[#18181B] text-white">
               {isSubmittingEmi ? 'Creating...' : 'Create Loan'}
             </Button>
           </div>
@@ -405,19 +430,19 @@ export const LoansGoals: React.FC = () => {
 
       {/* SAVINGS DIALOG */}
       <Dialog isOpen={isSavingsOpen} onClose={() => setIsSavingsOpen(false)} title="Add Savings Goal">
-        <form onSubmit={handleSavings(onSubmitSavings)} className="space-y-4 text-left">
-          <Input label="Goal Title" placeholder="e.g. Emergency Funds, New Laptop, Holiday" error={savingsErr.title?.message} {...regSavings('title')} />
-          
+        <form onSubmit={handleSavings(onSubmitSavings)} className="space-y-4 text-left font-sans pt-1">
+          <Input label="Goal Title" placeholder="e.g. Emergency Funds, Holiday Trip" error={savingsErr.title?.message} {...regSavings('title')} />
+
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Target Amount" placeholder="0.00" error={savingsErr.targetAmount?.message} {...regSavings('targetAmount')} />
-            <Input label="Current Saved (Optional)" placeholder="0.00" {...regSavings('currentAmount')} />
+            <Input label={`Target Amount (${currency})`} placeholder="0.00" error={savingsErr.targetAmount?.message} {...regSavings('targetAmount')} />
+            <Input label={`Current Saved (${currency})`} placeholder="0.00" {...regSavings('currentAmount')} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <Input label="Target Date" type="date" error={savingsErr.targetDate?.message} {...regSavings('targetDate')} />
             <div className="flex flex-col gap-1.5 w-full">
-              <label className="text-sm font-medium leading-none">Goal Schedule</label>
-              <select className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none" {...regSavings('interval')}>
+              <label className="text-xs font-bold text-zinc-900 dark:text-zinc-100 leading-none">Goal Schedule</label>
+              <select className="flex h-11 w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2.5 text-xs font-semibold text-zinc-900 dark:text-white focus:outline-none" {...regSavings('interval')}>
                 <option value="monthly">Monthly Goal</option>
                 <option value="quarterly">Quarterly Goal</option>
                 <option value="yearly">Yearly Goal</option>
@@ -425,8 +450,11 @@ export const LoansGoals: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="submit" disabled={isSubmittingSavings}>
+          <div className="pt-3 flex items-center justify-end gap-3 border-t border-zinc-100 dark:border-zinc-800">
+            <Button type="button" variant="outline" onClick={() => setIsSavingsOpen(false)} className="rounded-full text-xs">
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmittingSavings} className="rounded-full font-bold text-xs bg-[#18181B] text-white">
               {isSubmittingSavings ? 'Logging...' : 'Log Goal'}
             </Button>
           </div>
@@ -435,15 +463,18 @@ export const LoansGoals: React.FC = () => {
 
       {/* ADJUST FUNDS DIALOG */}
       <Dialog isOpen={isAdjustProgressOpen} onClose={() => setIsAdjustProgressOpen(false)} title="Add Savings Funds">
-        <div className="space-y-4 text-left">
+        <div className="space-y-4 text-left font-sans pt-1">
           <Input
-            label="Amount to Add"
+            label={`Amount to Deposit (${currency})`}
             placeholder="Enter value"
             value={adjustAmount}
             onChange={(e) => setAdjustAmount(e.target.value)}
           />
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button onClick={handleSaveProgress} disabled={isSavingProgress}>
+          <div className="pt-3 flex items-center justify-end gap-3 border-t border-zinc-100 dark:border-zinc-800">
+            <Button type="button" variant="outline" onClick={() => setIsAdjustProgressOpen(false)} className="rounded-full text-xs">
+              Cancel
+            </Button>
+            <Button onClick={handleSaveProgress} disabled={isSavingProgress} className="rounded-full font-bold text-xs bg-[#18181B] text-white">
               {isSavingProgress ? 'Confirming...' : 'Confirm Deposit'}
             </Button>
           </div>
@@ -452,4 +483,5 @@ export const LoansGoals: React.FC = () => {
     </div>
   );
 };
+
 export default LoansGoals;

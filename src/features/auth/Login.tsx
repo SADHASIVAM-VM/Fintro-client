@@ -8,9 +8,6 @@ import { useLoginMutation } from './authApi';
 import { useAppDispatch } from '@/hooks/redux';
 import { setCredentials } from './authSlice';
 import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
-import { ShieldCheck } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -55,53 +52,61 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <Card className="border-none bg-card shadow rounded-2xl p-2 text-left">
-      <CardHeader className="text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center mb-4">
-          <img src="/logo.png" alt="Logo" className="h-12 w-12 object-contain rounded-xl" />
-        </div>
-        <CardTitle className="text-2xl font-semibold font-sans">Access Fintro.</CardTitle>
-        <CardDescription className="font-sans text-xs">
-          Sign in to manage your budget, expenses, and transaction logs.
-        </CardDescription>
-      </CardHeader>
+    <div className="space-y-5 text-center font-sans">
+      {/* Title & Subtitle Matching Reference Screen 1 */}
+      <div>
+        <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900 dark:text-white leading-tight">
+          Track All Your Money in One Place
+        </h2>
+        <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-xs mx-auto leading-relaxed font-medium">
+          Track your balance, cards, transactions, and more from a single screen
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="space-y-4">
-          <Input
-            label="Email Address"
-            type="email"
-            placeholder="E.g. sxxxxm@example.com"
-            error={errors.email?.message}
-            {...register('email')}
-          />
-          <Input
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            error={errors.password?.message}
-            {...register('password')}
-          />
-        </CardContent>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-left">
+        <Input
+          label="Email Address"
+          type="email"
+          placeholder="e.g. user@example.com"
+          error={errors.email?.message}
+          className="rounded-2xl border-zinc-200 dark:border-zinc-800"
+          {...register('email')}
+        />
 
-        <CardFooter className="flex flex-col gap-4">
-          {loginError && (
-            <div className="text-xs font-semibold text-[#FF5A5A] text-center p-2.5 bg-[#FF5A5A]/10 rounded-lg border border-[#FF5A5A]/20 w-full font-sans">
-              {loginError}
-            </div>
-          )}
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Signing In...' : 'Sign In'}
-          </Button>
-          <div className="text-center text-sm text-muted-foreground font-sans">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-primary hover:underline font-medium">
-              Register
-            </Link>
+        <Input
+          label="Password"
+          type="password"
+          placeholder="••••••••"
+          error={errors.password?.message}
+          className="rounded-2xl border-zinc-200 dark:border-zinc-800"
+          {...register('password')}
+        />
+
+        {loginError && (
+          <div className="text-xs font-semibold text-rose-500 text-center p-2.5 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-800 w-full">
+            {loginError}
           </div>
-        </CardFooter>
+        )}
+
+        {/* Matte Black Pill Action Button Matching Reference Screen 1 */}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full py-4 px-4 rounded-full bg-[#18181B] text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200 text-sm font-extrabold shadow-lg transition-all cursor-pointer mt-2"
+        >
+          {isLoading ? 'verifying...' : 'Login'}
+        </button>
       </form>
-    </Card>
+
+      {/* Footer Text Link Matching Reference Screen 1 */}
+      <div className="pt-2 text-xs text-zinc-500 dark:text-zinc-400">
+        Don't have an account?{' '}
+        <Link to="/register" className="font-bold text-zinc-900 dark:text-white underline hover:opacity-80">
+          Create an account
+        </Link>
+      </div>
+    </div>
   );
 };
+
 export default Login;

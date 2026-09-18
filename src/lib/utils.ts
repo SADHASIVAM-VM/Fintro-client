@@ -7,11 +7,20 @@ export function cn(...inputs: ClassValue[]) {
 
 export function getFileUrl(path: string | undefined): string {
   if (!path) return '';
-  if (path.startsWith('http://') || path.startsWith('https://')) {
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
     return path;
   }
-  const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
-  const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+
+  const envApiUrl = import.meta.env.VITE_API_URL;
+  let baseUrl = '';
+
+  if (envApiUrl) {
+    baseUrl = envApiUrl.replace('/api', '').replace(/\/$/, '');
+  } else {
+    // Default fallback to server dev port
+    baseUrl = 'http://localhost:5000';
+  }
+
   const cleanPath = path.startsWith('/') ? path : '/' + path;
-  return `${cleanBase}${cleanPath}`;
+  return `${baseUrl}${cleanPath}`;
 }

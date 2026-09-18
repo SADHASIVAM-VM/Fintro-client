@@ -8,9 +8,6 @@ import { useRegisterMutation } from './authApi';
 import { useAppDispatch } from '@/hooks/redux';
 import { setCredentials } from './authSlice';
 import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
-import { UserPlus } from 'lucide-react';
 
 const registerSchema = z
   .object({
@@ -57,62 +54,69 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <Card className="border-none bg-card shadow rounded-2xl p-2 text-left">
-      <CardHeader className="text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary mb-4">
-          <img src="/logo.png" alt="Logo" className="h-8 w-8 object-contain bg-white rounded-sm border border-primary" />
-        </div>
-        <CardTitle className="text-2xl font-bold font-sans">Create a new account</CardTitle>
-        <CardDescription className="font-sans text-xs">
-          Sign up to manage your budget, expenses, and transaction logs.
-        </CardDescription>
-      </CardHeader>
+    <div className="space-y-5 text-center font-sans">
+      {/* Title & Subtitle Matching Reference Screen 1 */}
+      <div>
+        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#111827] dark:text-white leading-tight font-sans">
+          All your finances in one place
+        </h2>
+        <p className="text-xs sm:text-sm text-[#6B7280] dark:text-slate-400 mt-2 max-w-xs mx-auto leading-relaxed">
+          Stay on top of your spending and savings effortlessly.
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="space-y-4">
-          <Input
-            label="Full Name"
-            type="text"
-            placeholder="John Doe"
-            error={errors.name?.message}
-            {...register('name')}
-          />
-          <Input
-            label="Email Address"
-            type="email"
-            placeholder="john@example.com"
-            error={errors.email?.message}
-            {...register('email')}
-          />
-          <Input
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            error={errors.password?.message}
-            {...register('password')}
-          />
-          <Input
-            label="Confirm Password"
-            type="password"
-            placeholder="••••••••"
-            error={errors.confirmPassword?.message}
-            {...register('confirmPassword')}
-          />
-        </CardContent>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5 text-left">
+        <Input
+          label="Full Name"
+          type="text"
+          placeholder="e.g. John Doe"
+          error={errors.name?.message}
+          className="rounded-2xl border-[#E5E7EB] dark:border-slate-800"
+          {...register('name')}
+        />
+        <Input
+          label="Email Address"
+          type="email"
+          placeholder="e.g. john@example.com"
+          error={errors.email?.message}
+          className="rounded-2xl border-[#E5E7EB] dark:border-slate-800"
+          {...register('email')}
+        />
+        <Input
+          label="Password"
+          type="password"
+          placeholder="••••••••"
+          error={errors.password?.message}
+          className="rounded-2xl border-[#E5E7EB] dark:border-slate-800"
+          {...register('password')}
+        />
+        <Input
+          label="Confirm Password"
+          type="password"
+          placeholder="••••••••"
+          error={errors.confirmPassword?.message}
+          className="rounded-2xl border-[#E5E7EB] dark:border-slate-800"
+          {...register('confirmPassword')}
+        />
 
-        <CardFooter className="flex flex-col gap-4">
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Creating Account...' : 'Create Account'}
-          </Button>
-          <div className="text-center text-sm text-muted-foreground font-sans">
-            Already have an account?{' '}
-            <Link to="/login" className="text-primary hover:underline font-medium">
-              Sign In
-            </Link>
-          </div>
-        </CardFooter>
+        {/* Black Pill Action Button Matching Reference Screen 1 */}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full py-3.5 px-4 rounded-full bg-[#1C1C1E] text-white hover:bg-[#2C2C2E] dark:bg-white dark:text-[#1C1C1E] dark:hover:bg-slate-200 text-sm font-extrabold shadow-md transition-all cursor-pointer mt-2"
+        >
+          {isLoading ? 'Creating Account...' : 'Create an account'}
+        </button>
       </form>
-    </Card>
+
+      {/* Footer Text Link Matching Reference Screen 1 */}
+      <div className="pt-2 text-xs text-[#6B7280] dark:text-slate-400">
+        Have an account?{' '}
+        <Link to="/login" className="font-bold text-[#111827] dark:text-white underline hover:opacity-80">
+          Log in
+        </Link>
+      </div>
+    </div>
   );
 };
 export default Register;

@@ -18,6 +18,9 @@ const Expenses = lazy(() => import('@/features/expenses/Expenses'));
 const Ledger = lazy(() => import('@/features/borrow/Ledger'));
 const RoomManagement = lazy(() => import('@/features/room/RoomManagement'));
 const LoansGoals = lazy(() => import('@/features/emi/LoansGoals'));
+const Accounts = lazy(() => import('@/features/accounts/Accounts'));
+const Subscriptions = lazy(() => import('@/features/commitments/Subscriptions'));
+const FinancialInbox = lazy(() => import('@/features/inbox/FinancialInbox'));
 const Reports = lazy(() => import('@/features/reports/Reports'));
 
 // Lazily load error pages
@@ -112,6 +115,30 @@ export const router = createBrowserRouter([
             element: (
               <Suspense fallback={<Loader />}>
                 <LoansGoals />
+              </Suspense>
+            ),
+          },
+          {
+            path: ROUTES.ACCOUNTS,
+            element: (
+              <Suspense fallback={<Loader />}>
+                <Accounts />
+              </Suspense>
+            ),
+          },
+          {
+            path: ROUTES.SUBSCRIPTIONS,
+            element: (
+              <Suspense fallback={<Loader />}>
+                <Subscriptions />
+              </Suspense>
+            ),
+          },
+          {
+            path: ROUTES.INBOX,
+            element: (
+              <Suspense fallback={<Loader />}>
+                <FinancialInbox />
               </Suspense>
             ),
           },

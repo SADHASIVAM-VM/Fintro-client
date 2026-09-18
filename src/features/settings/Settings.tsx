@@ -13,14 +13,18 @@ import {
   Bell,
   Sun,
   Moon,
+  Monitor,
   Globe,
   Database,
+  CheckCircle2,
+  Lock,
 } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useAppSelector, useAppDispatch } from '@/hooks/redux';
 import { setTheme } from '@/store/themeSlice';
 import { Helmet } from 'react-helmet-async';
@@ -38,7 +42,7 @@ export const Settings: React.FC = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useAppDispatch();
   const theme = useAppSelector((state) => state.theme.mode);
-  
+
   // Queries
   const { data: settings, updateSettings, restoreBackup, triggerBackupDownload, isLoading } = useSettings();
 
@@ -79,7 +83,7 @@ export const Settings: React.FC = () => {
     reader.readAsText(file);
   };
 
-  const { getRootProps, getInputProps } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { 'application/json': ['.json'] },
     maxFiles: 1,
@@ -93,7 +97,7 @@ export const Settings: React.FC = () => {
         language: data.language,
         budgetLimits: data.budgetLimits ? Number(data.budgetLimits) : undefined,
       });
-      enqueueSnackbar('Settings updated', { variant: 'success' });
+      enqueueSnackbar('Settings updated successfully', { variant: 'success' });
     } catch {
       enqueueSnackbar('Failed to save settings', { variant: 'error' });
     }
@@ -110,138 +114,167 @@ export const Settings: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 text-left">
+    <div className="space-y-6 text-left font-sans pb-16 max-w-xl mx-auto animate-fade-in">
       <Helmet>
-        <title>Settings | Fintro</title>
+        <title>Settings — Fintro</title>
       </Helmet>
 
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground text-sm font-sans mt-0.5">
-          Configure currency displays, notification flags, theme toggles, and database JSON backups.
+      {/* Header Banner */}
+      <div className="pt-2">
+        <h1 className="text-xl font-extrabold text-zinc-900 dark:text-white">Settings</h1>
+        <p className="text-xs text-zinc-400 font-medium mt-0.5">
+          Configure preferences, currency, theme mode, and data backups
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* Core preferences form */}
-        <div className="md:col-span-2 space-y-6">
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-1.5 text-lg">
-                  <Globe className="h-5 w-5 text-primary" /> Core Preferences
-                </CardTitle>
-                <CardDescription className="font-sans">
-                  Define language, timezone, and global monthly budget indicators.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5 w-full">
-                    <label className="text-sm font-medium leading-none">Currency Display</label>
-                    <select className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none" {...register('currency')}>
-                      <option value="INR">INR (₹)</option>
-                      <option value="USD">USD ($)</option>
-                      <option value="EUR">EUR (€)</option>
-                      <option value="GBP">GBP (£)</option>
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-1.5 w-full">
-                    <label className="text-sm font-medium leading-none">Timezone</label>
-                    <select className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none" {...register('timezone')}>
-                      <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
-                      <option value="UTC">UTC</option>
-                      <option value="America/New_York">EST (New York)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5 w-full">
-                    <label className="text-sm font-medium leading-none">Language</label>
-                    <select className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none" {...register('language')}>
-                      <option value="en">English</option>
-                      <option value="es">Spanish</option>
-                    </select>
-                  </div>
-                  <Input label="Global Monthly Budget limit" placeholder="0.00" {...register('budgetLimits')} />
-                </div>
-
-                <div className="flex justify-end pt-4 border-t mt-6">
-                  <Button type="submit" disabled={isSubmitting}>
-                    Save Changes
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </form>
-
-          {/* Theme card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-1.5 text-lg">
-                {theme === 'dark' ? <Moon className="h-5 w-5 text-indigo-400" /> : <Sun className="h-5 w-5 text-yellow-500" />} Theme Selector
-              </CardTitle>
-              <CardDescription className="font-sans">Toggle light or dark styling mode.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex items-center justify-between">
-              <div>
-                <span className="font-semibold block text-sm">Theme Mode</span>
-                <span className="text-xs text-muted-foreground font-sans block mt-0.5">Currently active styling layout</span>
-              </div>
-              <Button variant="outline" onClick={() => dispatch(setTheme(theme === 'dark' ? 'light' : 'dark'))} className="font-sans text-xs">
-                Switch to {theme === 'dark' ? 'Light' : 'Dark'} Mode
-              </Button>
-            </CardContent>
-          </Card>
+      {/* Theme Preference Card */}
+      <div className="bg-white dark:bg-zinc-900 rounded-3xl p-5 shadow-sm border border-zinc-100 dark:border-zinc-800 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {theme === 'dark' ? <Moon className="w-5 h-5 text-amber-400" /> : <Sun className="w-5 h-5 text-amber-500" />}
+            <h3 className="text-sm font-extrabold text-zinc-900 dark:text-white">Theme Preference</h3>
+          </div>
+          <span className="text-xs font-semibold text-zinc-400 capitalize">{theme} Mode Active</span>
         </div>
 
-        {/* Database backup card */}
-        <div className="md:col-span-1 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-1.5 text-lg">
-                <Database className="h-5 w-5 text-green-500" /> Database Backup & Restore
-              </CardTitle>
-              <CardDescription className="font-sans">
-                Export files or restore database dumps in JSON format.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Backup */}
-              <div className="space-y-2">
-                <span className="font-semibold text-sm block">Export Backup</span>
-                <p className="text-xs text-muted-foreground font-sans leading-relaxed">
-                  Downloads all expenses, incomes, room details, and loan records into a JSON dump.
-                </p>
-                <Button onClick={handleExportBackup} variant="outline" className="w-full gap-1.5 font-sans text-xs">
-                  <Download className="h-4 w-4" /> Download Backup JSON
-                </Button>
-              </div>
+        <div className="grid grid-cols-3 gap-2 pt-1">
+          <button
+            type="button"
+            onClick={() => dispatch(setTheme('light'))}
+            className={`flex items-center justify-center gap-2 p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer ${theme === 'light'
+                ? 'bg-[#18181B] text-white dark:bg-white dark:text-zinc-900 border-transparent shadow-md'
+                : 'bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 border-zinc-200/80 dark:border-zinc-700 hover:bg-zinc-100'
+              }`}
+          >
+            <Sun className="w-4 h-4" /> Light
+          </button>
 
-              {/* Restore */}
-              <div className="space-y-2 border-t pt-4">
-                <span className="font-semibold text-sm block">Restore Backup</span>
-                <p className="text-xs text-muted-foreground font-sans leading-relaxed">
-                  Upload a previously exported backup file to restore records. This overrides current database contents.
-                </p>
-                <div
-                  {...getRootProps()}
-                  className="border-2 border-dashed border-input hover:bg-accent/30 rounded-lg p-6 text-center cursor-pointer transition-colors"
-                >
-                  <input {...getInputProps()} />
-                  <Upload className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
-                  <span className="text-xs font-semibold block text-muted-foreground">
-                    Drag backup file here
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <button
+            type="button"
+            onClick={() => dispatch(setTheme('dark'))}
+            className={`flex items-center justify-center gap-2 p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer ${theme === 'dark'
+                ? 'bg-[#18181B] text-white dark:bg-white dark:text-zinc-900 border-transparent shadow-md'
+                : 'bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 border-zinc-200/80 dark:border-zinc-700 hover:bg-zinc-100'
+              }`}
+          >
+            <Moon className="w-4 h-4" /> Dark
+          </button>
+
+          <button
+            type="button"
+            onClick={() => dispatch(setTheme('system'))}
+            className={`flex items-center justify-center gap-2 p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer ${theme === 'system'
+                ? 'bg-[#18181B] text-white dark:bg-white dark:text-zinc-900 border-transparent shadow-md'
+                : 'bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 border-zinc-200/80 dark:border-zinc-700 hover:bg-zinc-100'
+              }`}
+          >
+            <Monitor className="w-4 h-4" /> System
+          </button>
+        </div>
+      </div>
+
+      {/* Core Preferences Form Card */}
+      <div className="bg-white dark:bg-zinc-900 rounded-3xl p-5 shadow-sm border border-zinc-100 dark:border-zinc-800 space-y-4">
+        <div className="flex items-center gap-2 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+          <Globe className="w-5 h-5 text-zinc-700 dark:text-zinc-200" />
+          <h3 className="text-sm font-extrabold text-zinc-900 dark:text-white">Core Regional Preferences</h3>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 font-sans text-left">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5 w-full">
+              <label className="text-xs font-bold text-zinc-900 dark:text-zinc-100 leading-none">Currency Display</label>
+              <select
+                {...register('currency')}
+                className="flex h-11 w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-zinc-900 dark:text-white focus:outline-none"
+              >
+                <option value="INR">INR (₹)</option>
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="GBP">GBP (£)</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1.5 w-full">
+              <label className="text-xs font-bold text-zinc-900 dark:text-zinc-100 leading-none">Timezone</label>
+              <select
+                {...register('timezone')}
+                className="flex h-11 w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-zinc-900 dark:text-white focus:outline-none"
+              >
+                <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+                <option value="UTC">UTC</option>
+                <option value="America/New_York">EST (New York)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5 w-full">
+              <label className="text-xs font-bold text-zinc-900 dark:text-zinc-100 leading-none">Language</label>
+              <select
+                {...register('language')}
+                className="flex h-11 w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-zinc-900 dark:text-white focus:outline-none"
+              >
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+              </select>
+            </div>
+
+            <Input
+              label="Global Monthly Budget (₹)"
+              placeholder="50000"
+              {...register('budgetLimits')}
+            />
+          </div>
+
+          <div className="pt-3 flex justify-end border-t border-zinc-100 dark:border-zinc-800">
+            <Button type="submit" disabled={isSubmitting} className="rounded-full font-bold bg-[#18181B] text-white">
+              {isSubmitting ? 'Saving...' : 'Save Preferences'}
+            </Button>
+          </div>
+        </form>
+      </div>
+
+      {/* Database Backup & Restore Card */}
+      <div className="bg-white dark:bg-zinc-900 rounded-3xl p-5 shadow-sm border border-zinc-100 dark:border-zinc-800 space-y-4">
+        <div className="flex items-center gap-2 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+          <Database className="w-5 h-5 text-emerald-500" />
+          <h3 className="text-sm font-extrabold text-zinc-900 dark:text-white">Data Export & Backup Dumps</h3>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/40 rounded-2xl border border-zinc-200/80 dark:border-zinc-700/80">
+            <div>
+              <h4 className="text-xs font-bold text-zinc-900 dark:text-white">Export Complete Backup</h4>
+              <p className="text-[11px] text-zinc-400 font-medium">Download all tables into a JSON dump file</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleExportBackup}
+              className="px-3.5 py-2 rounded-full bg-[#18181B] text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+            >
+              <Download className="w-3.5 h-3.5" /> Export JSON
+            </button>
+          </div>
+
+          <div className="space-y-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+            <h4 className="text-xs font-bold text-zinc-900 dark:text-white">Restore Database Backup</h4>
+            <div
+              {...getRootProps()}
+              className={`border border-dashed rounded-2xl p-5 text-center cursor-pointer transition-colors ${isDragActive ? 'border-zinc-900 bg-zinc-100' : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800/50'
+                }`}
+            >
+              <input {...getInputProps()} />
+              <Upload className="w-6 h-6 text-zinc-400 mx-auto mb-1.5" />
+              <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 block">
+                Drag & drop JSON backup file here to restore
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
+
 export default Settings;
