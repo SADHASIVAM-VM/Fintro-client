@@ -67,6 +67,7 @@ export const Subscriptions: React.FC = () => {
     isRefetching,
     refetch,
     createSubscription,
+    updateSubscription,
     deleteSubscription
   } = useSubscriptions();
 
@@ -118,7 +119,7 @@ export const Subscriptions: React.FC = () => {
 
   // Derived calendar assigned bill events with green (paid) vs amber (pending due) indicators
   const calendarEvents: BillCalendarEvent[] = useMemo(() => {
-    return allBills.map((b) => {
+    return allBills.map((b: any) => {
       const dueDayNum = Number(b.dueDay || 5);
       const combined = (b.name + ' ' + (b.category || '')).toLowerCase();
 
@@ -292,15 +293,15 @@ export const Subscriptions: React.FC = () => {
   };
 
   // Calculate totals
-  const totalMonthlyCommitments = allBills.reduce((sum, b) => sum + Number(b.cost || 0), 0);
-  const paidThisMonthTotal = allBills.filter((b) => b.isPaidThisMonth).reduce((sum, b) => sum + Number(b.cost || 0), 0);
+  const totalMonthlyCommitments = allBills.reduce((sum: number, b: any) => sum + Number(b.cost || 0), 0);
+  const paidThisMonthTotal = allBills.filter((b: any) => b.isPaidThisMonth).reduce((sum: number, b: any) => sum + Number(b.cost || 0), 0);
   const remainingDueTotal = Math.max(0, totalMonthlyCommitments - paidThisMonthTotal);
 
   const currentDay = dayjs().date();
 
   // Filter bills list by active Tab and selected Date
   const filteredBills = useMemo(() => {
-    return allBills.filter((b) => {
+    return allBills.filter((b: any) => {
       const dueDayNum = Number(b.dueDay || 5);
       if (selectedDate !== null && dueDayNum !== selectedDate) {
         return false;
@@ -454,7 +455,7 @@ export const Subscriptions: React.FC = () => {
           </div>
         ) : (
           <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-            {filteredBills.map((bill) => {
+            {filteredBills.map((bill: any) => {
               const dueDayNum = Number(bill.dueDay || 5);
               const isPaid = bill.isPaidThisMonth;
               const isDueSoon = !isPaid && dueDayNum >= currentDay && dueDayNum <= currentDay + 5;

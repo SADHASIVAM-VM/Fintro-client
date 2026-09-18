@@ -9,7 +9,7 @@ export interface SubscriptionData {
   nextBillingDate: string;
   accountId?: string;
   categoryId?: string;
-  status?: 'active' | 'paused' | 'cancelled';
+  status?: 'active' | 'paused' | 'cancelled' | 'paid';
   priceHistory?: Array<{ amount: number; changedAt: string }>;
 }
 

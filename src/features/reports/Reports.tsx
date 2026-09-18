@@ -196,7 +196,7 @@ export const Reports: React.FC = () => {
 
   // Calculate Total Outflow for the selected Period
   const periodOutflow = useMemo(() => {
-    const sumFromCategories = categoryPieData.reduce((acc, c) => acc + (c.value || 0), 0);
+    const sumFromCategories = categoryPieData.reduce((acc: number, c: any) => acc + (c.value || 0), 0);
     if (sumFromCategories > 0) return sumFromCategories;
 
     if (period === 'this_week') {

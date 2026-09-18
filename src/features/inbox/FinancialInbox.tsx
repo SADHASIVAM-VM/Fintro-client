@@ -107,7 +107,7 @@ export const FinancialInbox: React.FC = () => {
       <BillViewer
         isOpen={isViewerOpen}
         onClose={() => setIsViewerOpen(false)}
-        fileUrl={viewerUrl}
+        fileUrl={viewerUrl || undefined}
         title={viewerTitle}
       />
 
