@@ -15,6 +15,9 @@ import {
   Wallet,
   PiggyBank,
   Plus,
+  Ghost,
+  ExternalLink,
+  Cloud,
 } from 'lucide-react';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useSettings } from '@/hooks/useSettings';
@@ -82,7 +85,7 @@ export const Dashboard: React.FC = () => {
       };
     }
     return {
-      icon: Sparkles,
+      icon: Cloud,
       style: 'bg-gradient-to-br from-indigo-400/20 via-violet-500/10 to-indigo-500/25 text-indigo-600 dark:text-indigo-400 border border-indigo-300/40 dark:border-indigo-700/40',
     };
   };

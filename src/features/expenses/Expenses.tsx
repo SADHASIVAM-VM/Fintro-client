@@ -33,11 +33,11 @@ import {
   Car,
   Tv,
   Activity,
-  Sparkles,
+  Cloud,
   Smartphone,
   Wifi,
   Home as HomeIcon,
-  Coffee
+  Coffee,
 } from 'lucide-react';
 
 const getTwoToneCategoryIcon = (categoryVal: any, titleStr: string) => {
@@ -85,7 +85,7 @@ const getTwoToneCategoryIcon = (categoryVal: any, titleStr: string) => {
   }
 
   return {
-    icon: Sparkles,
+    icon: Cloud,
     style: 'bg-gradient-to-br from-indigo-400/20 via-violet-500/10 to-indigo-500/25 text-indigo-600 dark:text-indigo-400 border border-indigo-300/40 dark:border-indigo-700/40',
   };
 };
@@ -687,7 +687,7 @@ export const Expenses: React.FC = () => {
 
             {ocrSuccessMsg && (
               <div className="p-2.5 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 rounded-xl text-xs font-medium flex items-center gap-1.5">
-                <span>✨ <strong>Smart OCR Extracted:</strong> {ocrSuccessMsg}</span>
+                <span>⚡<strong>OCR Extracted :</strong> Check and Confirm the details ✅ </span>
               </div>
             )}
           </div>
