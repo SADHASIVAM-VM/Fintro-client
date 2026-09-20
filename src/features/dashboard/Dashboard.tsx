@@ -133,7 +133,7 @@ export const Dashboard: React.FC = () => {
             className="h-12 w-12 border-2 border-white dark:border-zinc-800 shadow-sm"
           />
           <div>
-            <span className="text-xs font-medium text-zinc-400 block">Good Morning</span>
+            <span className="text-xs font-medium text-zinc-400 block">Good day,</span>
             <h1 className="text-lg font-extrabold text-zinc-900 dark:text-white leading-tight">
               {user?.name || 'Jane Cooper'}
             </h1>
@@ -156,10 +156,11 @@ export const Dashboard: React.FC = () => {
       {/* Golden Metallic Digital Credit Card (FintroCard) */}
       <FintroCard
         cardName="Fintro"
-        brand="VISA"
+        brand="ANGEL"
         balance={netBalance}
-        cardNumber="•••• •••• •••• 6925"
+        cardNumber="•••• •••• •••• 6299"
         expDate="10/28"
+        currency={settings?.currency === 'USD' ? '$' : '₹'}
         onClick={() => navigate(ROUTES.ACCOUNTS)}
       />
 

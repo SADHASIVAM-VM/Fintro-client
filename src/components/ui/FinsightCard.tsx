@@ -8,6 +8,7 @@ interface FintroCardProps {
   cardNumber?: string;
   expDate?: string;
   className?: string;
+  currency?: string;
   onClick?: () => void;
 }
 
@@ -18,10 +19,11 @@ export const FintroCard: React.FC<FintroCardProps> = ({
   cardNumber = '•••• •••• •••• 6925',
   expDate = '10/28',
   className = '',
+  currency = '₹',
   onClick,
 }) => {
   const formattedBalance = typeof balance === 'number'
-    ? `$${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    ? `${currency} ${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     : balance;
 
   return (
